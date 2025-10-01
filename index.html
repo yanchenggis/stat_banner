@@ -84,49 +84,49 @@
         bearing: 0
     });
 
-map.on('load', () => {
-    // Make sure there is a background layer
-    if (map.getLayer('background')) {
-        map.setPaintProperty('background', 'background-color', '#0b0b0b');
-    } else {
-        map.addLayer({
-            'id': 'background',
-            'type': 'background',
-            'paint': { 'background-color': '#0b0b0b' }
-        }, map.getStyle().layers[0].id);
-    }
-
-    // Remove rainbow extrusion if it exists
-    if (map.getLayer('3d-buildings')) {
-        map.removeLayer('3d-buildings');
-    }
-
-    // Add grey extrusions
-    map.addLayer({
-        'id': '3d-buildings',
-        'source': 'openmaptiles',
-        'source-layer': 'building',
-        'type': 'fill-extrusion',
-        'minzoom': 12,
-        'paint': {
-            'fill-extrusion-color': '#888888',
-            'fill-extrusion-height': [
-                'interpolate', ['linear'], ['zoom'],
-                12, 0,
-                13.5, ['get', 'render_height']
-            ],
-            'fill-extrusion-base': [
-                'interpolate', ['linear'], ['zoom'],
-                12, 0,
-                13.5, ['get', 'render_min_height']
-            ],
-            'fill-extrusion-opacity': 0.9
+    map.on('load', () => {
+        // Make sure there is a background layer
+        if (map.getLayer('background')) {
+            map.setPaintProperty('background', 'background-color', '#0b0b0b');
+        } else {
+            map.addLayer({
+                'id': 'background',
+                'type': 'background',
+                'paint': { 'background-color': '#0b0b0b' }
+            }, map.getStyle().layers[0].id);
         }
+    
+        // Remove rainbow extrusion if it exists
+        if (map.getLayer('3d-buildings')) {
+            map.removeLayer('3d-buildings');
+        }
+    
+        // Add grey extrusions
+        map.addLayer({
+            'id': '3d-buildings',
+            'source': 'openmaptiles',
+            'source-layer': 'building',
+            'type': 'fill-extrusion',
+            'minzoom': 12,
+            'paint': {
+                'fill-extrusion-color': '#888888',
+                'fill-extrusion-height': [
+                    'interpolate', ['linear'], ['zoom'],
+                    12, 0,
+                    13.5, ['get', 'render_height']
+                ],
+                'fill-extrusion-base': [
+                    'interpolate', ['linear'], ['zoom'],
+                    12, 0,
+                    13.5, ['get', 'render_min_height']
+                ],
+                'fill-extrusion-opacity': 0.9
+            }
+        });
+    
+        // now your map & buildings will show over the body gradient
+        setTimeout(animateTimeline, 200);
     });
-
-    // now your map & buildings will show over the body gradient
-    setTimeout(animateTimeline, 200);
-});
 
 function animateTimeline() {
         if (currentStep >= timeline.length) {
