@@ -2,97 +2,232 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Warisan KL 3D Map</title>
+  <title>Warisan KL — 3D banner (dark basemap, grey buildings)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
   <style>
-    body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    body { margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; }
+    .banner-container { width:100%; height:70vh; min-height:600px; position:relative; overflow:hidden; }
+    #map { position:absolute; top:0; right:0; bottom:0; left:0; }
+    .content-overlay {
+      position:absolute;
+      top:75%;
+      left:50px;
+      transform:translateY(-50%);
+      color:white;
+      z-index:20;
+      pointer-events:none;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .title { font-size:3.2rem; font-weight:700; margin:0 0 6px 0; }
+    .subtitle { font-size:1.05rem; opacity:0.95; margin:0; }
+    @media (max-width:768px) {
+      .banner-container { height:50vh; min-height:380px; }
+      .title { font-size:2rem; }
+      .content-overlay { left:20px; top:82%; }
+    }
+    .attribution {
+      position:absolute; right:8px; bottom:6px; z-index:30; color:#bbb; font-size:12px;
+      background: rgba(0,0,0,0.25); padding:6px 8px; border-radius:4px;
+    }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <script>
-    const map = new maplibregl.Map({
-      container: "map",
-      style: {
-        version: 8,
-        sources: {
-          "osm-tiles": {
-            type: "vector",
-            // You need a vector tile source that has building geometry.
-            // Example: OpenMapTiles vector tiles (self-hosted or via a provider).
-            url: "https://tiles.yourprovider.com/tiles.json"
-          }
-        },
-        layers: [
-          // Dark base — e.g. dark land, roads, etc.
-          {
-            id: "background",
-            type: "background",
-            paint: {
-              "background-color": "#1a1a1a"
-            }
-          },
-          {
-            id: "land",
-            type: "fill",
-            source: "osm-tiles",
-            "source-layer": "landcover",
-            paint: {
-              "fill-color": "#2a2a2a"
-            }
-          },
-          {
-            id: "road",
-            type: "line",
-            source: "osm-tiles",
-            "source-layer": "transport",
-            paint: {
-              "line-color": "#444",
-              "line-width": 1
-            }
-          },
-          // 3D buildings — uniform grey
-          {
-            id: "3d-buildings",
-            type: "fill-extrusion",
-            source: "osm-tiles",
-            "source-layer": "building",
-            minzoom: 15,
-            paint: {
-              "fill-extrusion-color": "#888888",
-              "fill-extrusion-height": ["get", "height"],        // or “render_height”
-              "fill-extrusion-base": ["get", "min_height"],
-              "fill-extrusion-opacity": 0.9
-            }
-          }
-        ],
-        // you can set other style properties if needed
-      },
-      center: [101.698, 3.144],
-      zoom: 14,
-      pitch: 45,
-      bearing: 0,
-      maxBounds: [
-        [101.686, 3.136],
-        [101.710, 3.154]
-      ]
-    });
+  <div class="banner-container">
+    <div id="map"></div>
+    <div class="content-overlay">
+      <div class="title">Urban Analytics</div>
+      <div class="subtitle">From understanding data to developing insights</div>
+    </div>
+    <div class="attribution">
+      Basemap: OpenStreetMap (dark) • Building footprints: OpenStreetMap / Overpass
+    </div>
+  </div>
 
-    map.on("load", () => {
-      // Add popups with data (example)
-      new maplibregl.Popup({ closeOnClick: false })
-        .setLngLat([101.6956, 3.1479])
-        .setHTML("<b>Masjid Jamek Station</b><br>~45,000 passengers/day (source: Rapid Rail dashboard)")
-        .addTo(map);
+<script>
+/* ======= CONFIG: Warisan KL bounding box (approx) ======= */
+const BBOX = {
+  south: 3.136,   // min lat
+  west:  101.686, // min lon
+  north: 3.154,   // max lat
+  east:  101.710  // max lon
+};
 
-      new maplibregl.Popup({ closeOnClick: false })
-        .setLngLat([101.6994, 3.1418])
-        .setHTML("<b>Jalan HSS</b><br>~120 F&B outlets (local survey data)")
-        .addTo(map);
+const CENTER = [(BBOX.west + BBOX.east) / 2, (BBOX.south + BBOX.north) / 2];
+
+/* ======= Minimal MapLibre style using Carto dark raster tiles (no API key) ======= */
+const styleObj = {
+  "version": 8,
+  "sources": {
+    "carto-dark": {
+      "type": "raster",
+      "tiles": [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+      ],
+      "tileSize": 256,
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#0b0b0b" }
+    },
+    {
+      "id": "carto-base",
+      "type": "raster",
+      "source": "carto-dark"
+    }
+  ]
+};
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: styleObj,
+  center: CENTER,
+  zoom: 14,
+  pitch: 45,
+  bearing: 0,
+  maxBounds: [
+    [BBOX.west - 0.005, BBOX.south - 0.005],
+    [BBOX.east + 0.005, BBOX.north + 0.005]
+  ]
+});
+
+map.addControl(new maplibregl.NavigationControl({showCompass:true, showZoom:true}));
+
+/* ======= Helper: convert Overpass JSON (ways with 'geometry') to GeoJSON polygons ======= */
+function overpassToGeoJSON(osmJson) {
+  const features = [];
+  (osmJson.elements || []).forEach(elem => {
+    if (elem.type === "way" && elem.geometry && elem.geometry.length) {
+      // build coordinates array [ [lon,lat], ... ]
+      let coords = elem.geometry.map(p => [p.lon, p.lat]);
+      // ensure closed ring
+      const first = coords[0], last = coords[coords.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first);
+
+      // compute a numeric height (meters) from tags, fallback rules:
+      const tags = elem.tags || {};
+      let h = null;
+      if (tags.height) {
+        // try parse "25", "25 m", "25.0"
+        const num = parseFloat(tags.height.replace(/[^\d\.\-]/g,''));
+        if (!isNaN(num)) h = num;
+      }
+      if (!h) {
+        const levels = tags['building:levels'] || tags.levels;
+        if (levels) {
+          const n = parseFloat(levels);
+          if (!isNaN(n)) h = n * 3.0; // assume ~3m per level
+        }
+      }
+      if (!h || isNaN(h)) h = 10; // default height
+
+      // push feature
+      features.push({
+        type: 'Feature',
+        properties: Object.assign({}, tags, { height_m: Number(h) }),
+        geometry: {
+          type: 'Polygon',
+          coordinates: [ coords ]
+        }
+      });
+    }
+    // Note: relations (multipolygons) are not fully handled here to keep client code simple.
+  });
+
+  return { type: 'FeatureCollection', features };
+}
+
+/* ======= Fetch building footprints from Overpass API (ways with building tag inside bbox) ======= */
+function fetchBuildingsBBox(bbox, onSuccess, onError) {
+  // Overpass QL: get ways (building) in bbox with geometry
+  const q = `
+[out:json][timeout:25];
+(
+  way["building"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
+);
+out body;
+>;
+out skel qt;`.trim();
+
+  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q);
+
+  fetch(url)
+    .then(r => {
+      if (!r.ok) throw new Error('Overpass request failed: ' + r.status);
+      return r.json();
+    })
+    .then(osmJson => {
+      const geojson = overpassToGeoJSON(osmJson);
+      onSuccess(geojson);
+    })
+    .catch(err => {
+      console.error('Overpass error:', err);
+      if (onError) onError(err);
     });
-  </script>
+}
+
+/* ======= Once map loaded, fetch buildings and add standardized grey extrusions ======= */
+map.on('load', () => {
+  fetchBuildingsBBox(BBOX, (geojson) => {
+    // add as source
+    if (map.getSource('osm-buildings')) map.removeLayer('osm-buildings-extrude') && map.removeSource('osm-buildings');
+
+    map.addSource('osm-buildings', { type: 'geojson', data: geojson });
+
+    map.addLayer({
+      id: 'osm-buildings-extrude',
+      type: 'fill-extrusion',
+      source: 'osm-buildings',
+      minzoom: 12,
+      paint: {
+        'fill-extrusion-color': '#888888',           // uniform grey color
+        'fill-extrusion-height': ['get', 'height_m'], // numeric height (meters) from properties
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 0.95
+      }
+    }, /* insert before */ 'carto-base');
+
+    // optional: subtle outline layer (thin) for readability
+    map.addLayer({
+      id: 'osm-buildings-outline',
+      type: 'line',
+      source: 'osm-buildings',
+      paint: {
+        'line-color': '#666666',
+        'line-width': 0.5,
+        'line-opacity': 0.6
+      }
+    });
+  }, (err) => {
+    // fallback: no buildings
+    console.warn('Buildings unavailable; continuing without 3D extrusions.');
+  });
+
+  /* ======= Popups: Masjid Jamek (official source) ======= */
+  const masjidCoords = [101.6956, 3.1479]; // lon, lat (approx)
+  const masjidPopup = new maplibregl.Popup({ closeOnClick: false, offset: 12 })
+    .setLngLat(masjidCoords)
+    .setHTML(`
+      <strong>Masjid Jamek Station</strong><br>
+      Ridership: <em>see official dashboard</em><br>
+      <small>Data as of 29 Sep 2025 (dashboard)</small><br>
+      <a href="https://data.gov.my/dashboard/rapid-explorer/rail/A0%3A%20All%20Stations/KJ13%3A%20Masjid%20Jamek" target="_blank" rel="noopener">Open: Rapid Rail Explorer (official)</a>
+    `)
+    .addTo(map);
+
+  /* NOTE:
+     - The Rapid Rail Explorer is an interactive dashboard (data loaded dynamically).
+     - If you want the popup to show the live numeric value automatically, run a server-side request to the datagovmy backend/chart API (their codebase exposes dashboard/chart endpoints) and return it to the browser (CORS will prevent direct client-side calls in many cases).
+     - Official dashboard: https://data.gov.my/dashboard/rapid-explorer/. See backend repo for how charts are served. :contentReference[oaicite:3]{index=3}
+  */
+});
+</script>
 </body>
 </html>
