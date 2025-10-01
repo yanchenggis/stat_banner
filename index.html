@@ -85,15 +85,23 @@
     });
 
 map.on('load', () => {
-    // Darken the base map background
-    map.setPaintProperty('background', 'background-color', '#0b0b0b');
-
-    // Remove your current 3D layer if needed (optional if you replace it)
-    if (map.getLayer('3d-buildings')) {
-      map.removeLayer('3d-buildings');
+    // Make sure there is a background layer
+    if (map.getLayer('background')) {
+        map.setPaintProperty('background', 'background-color', '#0b0b0b');
+    } else {
+        map.addLayer({
+            'id': 'background',
+            'type': 'background',
+            'paint': { 'background-color': '#0b0b0b' }
+        }, map.getStyle().layers[0].id);
     }
 
-    // Add uniform grey 3D buildings
+    // Remove rainbow extrusion if it exists
+    if (map.getLayer('3d-buildings')) {
+        map.removeLayer('3d-buildings');
+    }
+
+    // Add grey extrusions
     map.addLayer({
         'id': '3d-buildings',
         'source': 'openmaptiles',
@@ -101,7 +109,7 @@ map.on('load', () => {
         'type': 'fill-extrusion',
         'minzoom': 12,
         'paint': {
-            'fill-extrusion-color': '#888888',   // grey
+            'fill-extrusion-color': '#888888',
             'fill-extrusion-height': [
                 'interpolate', ['linear'], ['zoom'],
                 12, 0,
@@ -116,7 +124,7 @@ map.on('load', () => {
         }
     });
 
-    // Continue with your fly-to animation
+    // now your map & buildings will show over the body gradient
     setTimeout(animateTimeline, 200);
 });
 
