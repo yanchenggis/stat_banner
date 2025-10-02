@@ -1,1 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Warisan KL Urban Analytics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0;
+            background: #1a1a1a;
+        }
+        .banner-container {
+            width: 100%;
+            height: 70vh;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(15,93,244,1) 19%, rgba(33,200,117,1) 89%);
+        }
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+            height: 100%;
+        }
+        .content-overlay {
+            position: absolute;
+            top: 75%;
+            left: 50px;
+            transform: translateY(-50%);
+            color: white;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .title {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.7), 1px 1px 3px rgba(0,0,0,0.9);
+            font-family: Arial, sans-serif;
+        }
+        .subtitle {
+            font-size: 1.5em;
+            opacity: 0.9;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.7), 1px 1px 3px rgba(0,0,0,0.9);
+            font-family: Arial, sans-serif;
+        }
+        .maplibregl-popup-content {
+            background: rgba(26, 26, 26, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            min-width: 250px;
+        }
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #21C875;
+            margin-bottom: 10px;
+        }
+        .popup-metric {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0F5DF4;
+            margin: 8px 0;
+        }
+        .popup-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        .popup-source {
+            font-size: 10px;
+            color: #666;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #333;
+        }
+        .maplibregl-popup-tip {
+            border-top-color: rgba(26, 26, 26, 0.95) !important;
+        }
+        @media (max-width: 768px) {
+            .banner-container {
+                height: 50vh;
+                min-height: 400px;
+            }
+            .content-overlay {
+                left: 30px;
+                top: 80%;
+            }
+            .title {
+                font-size: 2.5em;
+            }
+            .subtitle {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="banner-container">
+        <div id="map"></div>
+        <div class="content-overlay">
+            <div class="title">Urban Analytics</div>
+            <div class="subtitle">Warisan KL Heritage District</div>
+        </div>
+    </div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/dark', // Dark mode basemap
+        center: [101.6941, 3.1500], // Warisan KL center
+        zoom: 14,
+        pitch: 55,
+        bearing: 0,
+        maxBounds: [[101.680, 3.135], [101.715, 3.165]] // Limit to Warisan KL area
+    });
 
+    // Urban data points with official sources
+    const dataPoints = [
+        {
+            name: "Masjid Jamek LRT Station",
+            coordinates: [101.6945, 3.1502],
+            metric: "~180,000",
+            label: "Daily Passengers (2024)",
+            description: "Major interchange station connecting Ampang/Sri Petaling Lines",
+            source: "Source: Rapid Rail/Prasarana Malaysia (2024)",
+            sourceUrl: "https://data.gov.my/dashboard/public-transportation"
+        },
+        {
+            name: "Jalan Tuanku Abdul Rahman",
+            coordinates: [101.6970, 3.1565],
+            metric: "250+",
+            label: "Retail & F&B Establishments",
+            description: "Historic shopping street with diverse commercial activities",
+            source: "Source: DBKL Business Census & Field Survey",
+            sourceUrl: "https://www.dbkl.gov.my/"
+        },
+        {
+            name: "Petaling Street (Chinatown)",
+            coordinates: [101.6967, 3.1445],
+            metric: "15,000+",
+            label: "Weekend Foot Traffic",
+            description: "Heritage bazaar and tourist hotspot",
+            source: "Source: Tourism Malaysia & DBKL Visitor Studies",
+            sourceUrl: "https://www.tourism.gov.my/"
+        },
+        {
+            name: "Pasar Seni Station",
+            coordinates: [101.6958, 3.1437],
+            metric: "~50,000",
+            label: "Daily Passengers",
+            description: "LRT station serving Central Market & heritage area",
+            source: "Source: Prasarana Malaysia (2024)",
+            sourceUrl: "https://data.gov.my/data-catalogue/ridership_headline"
+        },
+        {
+            name: "Central Market Area",
+            coordinates: [101.6965, 3.1456],
+            metric: "120+",
+            label: "Creative & Cultural Tenants",
+            description: "Art, craft, and cultural hub since 1888",
+            source: "Source: Central Market Management & Warisan KL",
+            sourceUrl: "https://www.warisankl.com/"
+        },
+        {
+            name: "Merdeka Square Precinct",
+            coordinates: [101.6935, 3.1475],
+            metric: "8.2 ha",
+            label: "Public Open Space",
+            description: "Historic civic square and event venue",
+            source: "Source: DBKL Public Space Inventory",
+            sourceUrl: "https://www.dbkl.gov.my/"
+        }
+    ];
+
+    map.on('load', () => {
+        // Add 3D buildings with grey standardized colors
+        map.addLayer({
+            'id': '3d-buildings',
+            'source': 'openmaptiles',
+            'source-layer': 'building',
+            'type': 'fill-extrusion',
+            'minzoom': 13,
+            'paint': {
+                'fill-extrusion-color': [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'render_height'],
+                    0, '#404040',      // Dark grey for low buildings
+                    50, '#4a4a4a',     
+                    100, '#555555',    // Medium grey
+                    200, '#606060',    
+                    300, '#6a6a6a',    // Light grey for tall buildings
+                    450, '#757575'
+                ],
+                'fill-extrusion-height': ['get', 'render_height'],
+                'fill-extrusion-base': ['get', 'render_min_height'],
+                'fill-extrusion-opacity': 0.9
+            }
+        });
+
+        // Add data point markers
+        dataPoints.forEach(point => {
+            // Create custom marker element
+            const el = document.createElement('div');
+            el.style.width = '20px';
+            el.style.height = '20px';
+            el.style.borderRadius = '50%';
+            el.style.background = '#0F5DF4';
+            el.style.border = '3px solid #21C875';
+            el.style.cursor = 'pointer';
+            el.style.boxShadow = '0 0 10px rgba(15,93,244,0.8)';
+
+            // Create popup content
+            const popupContent = `
+                <div class="popup-title">${point.name}</div>
+                <div class="popup-metric">${point.metric}</div>
+                <div class="popup-label">${point.label}</div>
+                <div style="font-size: 13px; color: #ccc; margin-top: 8px;">${point.description}</div>
+                <div class="popup-source">${point.source}</div>
+            `;
+
+            const popup = new maplibregl.Popup({ 
+                offset: 25,
+                closeButton: true,
+                closeOnClick: false
+            }).setHTML(popupContent);
+
+            new maplibregl.Marker(el)
+                .setLngLat(point.coordinates)
+                .setPopup(popup)
+                .addTo(map);
+        });
+
+        // Auto-rotate camera slowly through Warisan KL
+        let bearing = 0;
+        setInterval(() => {
+            bearing = (bearing + 0.3) % 360;
+            map.setBearing(bearing);
+        }, 100);
+    });
+</script>
+</body>
+</html>
