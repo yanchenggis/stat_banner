@@ -89,6 +89,10 @@
                 height: 50vh;
                 min-height: 400px;
             }
+            .maplibregl-popup-content {
+                min-width: 200px;
+                max-width: 250px;
+            }
             .content-overlay {
                 left: 30px;
                 top: 80%;
@@ -119,7 +123,12 @@
         pitch: 55,
         bearing: 0,
         maxBounds: [[101.680, 3.135], [101.715, 3.165]] // Limit to Warisan KL area
+        touchPitch: true,
+        touchZoomRotate: true,
+        dragRotate: true
     });
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     // Urban data points with official sources
     const dataPoints = [
